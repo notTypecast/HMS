@@ -10,7 +10,7 @@ class Patient:
         self.sex = sex
         self.AMKA = AMKA
         self.doctor_id = doctor_id
-        self.symtoms = symptoms
+        self.symptoms = symptoms
 
     @staticmethod
     def add(first_name, last_name, email, birthdate, sex, AMKA, doctor_id, symptoms, address=None, phone=None):
@@ -62,7 +62,7 @@ class Patient:
         c.execute("""
         UPDATE Patient 
         SET first_name=?, last_name=?, email=?, birthdate=?, sex=?, AMKA=?, doctor_id=?, symptoms=?, address=?, phone=? 
-        WHERE staff_id=?
+        WHERE patient_id=?
         """, 
         (
         getarg(first_name, self.first_name), 

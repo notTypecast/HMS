@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS Appointment (
     patient_id INTEGER NOT NULL,
     doctor_id INTEGER NOT NULL,
     appointment_time DATETIME NOT NULL,
+    notes TEXT DEFAULT NULL,
     completed TEXT CHECK(completed IN (("True", "False", "Cancelled"))) NOT NULL DEFAULT 'False',
     FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES Doctor(doctor_id) ON UPDATE CASCADE ON DELETE CASCADE
@@ -77,6 +78,13 @@ CREATE TABLE IF NOT EXISTS Address (
 CREATE TABLE IF NOT EXISTS StaffNotification (
     notification_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     message TEXT NOT NULL,
+    notification_type TEXT CHECK(notification_type IN ("AppointmentRequest"))) NOT NULL,
+    -- For appointment request notifications
+    patient_id INTEGER DEFAULT NULL,
+    speciality VARCHAR(255) DEFAULT NULL,
+    appointment_date DATE DEFAULT NULL,
+    appointment_info TEXT DEFAULT NULL,
+    -- --
     staff_id INTEGER NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Staff(staff_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
@@ -101,7 +109,7 @@ CREATE TABLE IF NOT EXISTS Medicine (
     route_of_administration TEXT CHECK(route_of_administration IN ("Oral", "Topical", "Intravenous")) DEFAULT NULL
 );
 
-CREATE TABLE IF NOT EXISTS Prescription(
+CREATE TABLE IF NOT EXISTS Prescription (
     prescription_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     patient_id INTEGER NOT NULL,
     doctor_id INTEGER NOT NULL,

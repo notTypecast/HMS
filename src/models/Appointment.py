@@ -48,3 +48,4 @@ class Appointment(ABC):
         c.execute("UPDATE Appointment SET patient_id=?, doctor_id=?, appointment_time=?, completed=? WHERE visit_id=?", (getarg(patient_id, self.patient_id), getarg(doctor_id, self.doctor_id), getarg(appointment_time, self.appointment_time), getarg(completed, self.completed), self.visit_id))
         conn.commit()
         conn.close()
+        

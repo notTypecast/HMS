@@ -57,3 +57,4 @@ class Prescription(ABC):
         c.execute("UPDATE Prescription SET patient_id=?, doctor_id=? WHERE prescription_id=?", (getarg(patient_id, self.patient_id), getarg(doctor_id, self.doctor_id), self.prescription_id))
         conn.commit()
         conn.close()
+        
