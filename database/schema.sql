@@ -1,3 +1,4 @@
+-- SQLBook: Code
 -- CREATE DATABASE IF NOT EXISTS hms;
 
 -- USE hms;
@@ -78,7 +79,7 @@ CREATE TABLE IF NOT EXISTS Address (
 CREATE TABLE IF NOT EXISTS StaffNotification (
     notification_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     message TEXT NOT NULL,
-    notification_type TEXT CHECK(notification_type IN ("AppointmentRequest"))) NOT NULL,
+    notification_type TEXT CHECK(notification_type IN ("AppointmentRequest","Message"))) NOT NULL,
     -- For appointment request notifications
     patient_id INTEGER DEFAULT NULL,
     speciality VARCHAR(255) DEFAULT NULL,

@@ -1,1 +1,2 @@
 from src.interfaces.PatientInterface import PatientInterface
+from src.interfaces.SecretaryInterface import SecretaryInterface

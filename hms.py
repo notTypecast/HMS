@@ -3,6 +3,7 @@ from src.interfaces import *
 ROLE = "Patient"
 role_dict = {
     "Patient": PatientInterface,
+    "Secretary": SecretaryInterface,
 }
 
 if __name__ == "__main__":
