@@ -40,6 +40,8 @@ class Notification:
             elif self.notification_type == "Contact":
                 self.patient_id = row[3]
                 self.contact_info = row[9]
+            elif self.notification_type == "AnalysisResult":
+                self.sample_id = row[10]
 
             self.staff_id = row[-1]
 
@@ -69,6 +71,9 @@ class Notification:
                 args)
             elif args[1] == "Contact":
                 c.execute("""INSERT INTO StaffNotification (message, notification_type, patient_id, contact_info, staff_id) VALUES (?, ?, ?, ?, ?)""",
+                args)
+            elif args[1] == "AnalysisResult":
+                c.execute("""INSERT INTO StaffNotification (message, notification_type, sample_id, staff_id) VALUES (?, ?, ?, ?)""",
                 args)
             
         conn.commit()

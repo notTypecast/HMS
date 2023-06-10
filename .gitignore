@@ -3,3 +3,5 @@ database/hms.db
 src/__pycache__/
 src/models/__pycache__/
 src/interfaces/__pycache__/
+
+database/hms.db

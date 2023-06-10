@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS Address (
 CREATE TABLE IF NOT EXISTS StaffNotification (
     notification_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     message TEXT NOT NULL,
-    notification_type TEXT CHECK(notification_type IN ("AppointmentRequest", "Message", "Symptoms", "Contact")) NOT NULL,
+    notification_type TEXT CHECK(notification_type IN ("AppointmentRequest", "Message", "Symptoms", "Contact", "AnalysisResult")) NOT NULL,
     -- For appointment request notifications (secretary)
     patient_id INTEGER DEFAULT NULL,
     speciality VARCHAR(255) DEFAULT NULL,
@@ -93,6 +93,9 @@ CREATE TABLE IF NOT EXISTS StaffNotification (
     -- For contact notifications from patients (doctor)
     -- uses patient_id from above
     contact_info TEXT DEFAULT NULL,
+    -- --
+    -- For analysis result notifications (doctor)
+    sample_id INTEGER DEFAULT NULL,
     -- --
     staff_id INTEGER NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Staff(staff_id) ON UPDATE CASCADE ON DELETE CASCADE
@@ -139,8 +142,10 @@ CREATE TABLE IF NOT EXISTS Sample (
     sample_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     labuser_id INTEGER NOT NULL,
     patient_id INTEGER NOT NULL,
-    sample_date TIMESTAMP NOT NULL,
+    doctor_id INTEGER NOT NULL,
+    description TEXT DEFAULT NULL,
     result TEXT NOT NULL,
     FOREIGN KEY (labuser_id) REFERENCES labUser(labuser_id) ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON UPDATE CASCADE ON DELETE CASCADE
+    FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON UPDATE CASCADE ON DELETE CASCADE
 );

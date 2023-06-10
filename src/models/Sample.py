@@ -19,19 +19,23 @@ class Sample:
 
         self.labuser_id = row[1]
         self.patient_id = row[2]
-        self.sample_date = row[3]
-        self.result = row[4]
+        self.doctor_id = row[3]
+        self.description = row[4]
+        self.result = row[5]
 
     @staticmethod
-    def add(labuser_id, patient_id, sample_date, result):
+    def add(patient_id, doctor_id, description, result=None):
         """
         Add a new Sample to the database
         Returns Sample object of newly created sample
         """
         conn = utils.get_db_connection()
         c = conn.cursor()
+
+        c.execute("SELECT labuser_id FROM LabUser LIMIT 1")
+        labuser_id = c.fetchall()[0][0]
         
-        c.execute("INSERT INTO Sample (labuser_id, patient_id, sample_date, result) VALUES (?, ?, ?, ?)", (labuser_id, patient_id, sample_date, result))
+        c.execute("INSERT INTO Sample (labuser_id, patient_id, doctor_id, description, result) VALUES (?, ?, ?, ?)", (labuser_id, patient_id, doctor_id, description, result))
 
         sample = Sample(c.lastrowid)
         conn.commit()
@@ -39,25 +43,22 @@ class Sample:
 
         return sample
     
-    def remove(self):
+    def setResult(self, result):
         """
-        Destructor of Sample
-        Deletes the sample from the database
+        Set the result of the sample
         """
         conn = utils.get_db_connection()
         c = conn.cursor()
-        c.execute("DELETE FROM Sample WHERE sample_id=?", (self.sample_id,))
+        c.execute("UPDATE Sample SET result=? WHERE sample_id=?", (result, self.sample_id))
         conn.commit()
+        conn.close()
+    
+    @staticmethod
+    def getSamplesForLabUser(labuser_id):
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT sample_id FROM Sample WHERE labuser_id = ?", (labuser_id,))
+        rows = c.fetchall()
         conn.close()
 
-    def modify(self, labuser_id=None, patient_id=None, sample_date=None, result=None):
-        """
-        Modify the sample
-        """
-        getarg = lambda new, old: new if new is not None else old
-        
-        conn = utils.get_db_connection()
-        c = conn.cursor()
-        c.execute("UPDATE Sample SET labuser_id=?, patient_id=?, sample_date=?, result=? WHERE sample_id=?", (getarg(labuser_id, self.labuser_id), getarg(patient_id, self.patient_id), getarg(sample_date, self.sample_date), getarg(result, self.result), self.sample_id))
-        conn.commit()
-        conn.close()
+        return [Sample(row[0]) for row in rows]

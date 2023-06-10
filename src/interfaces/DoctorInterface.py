@@ -3,6 +3,7 @@ from src.models.Doctor import Doctor
 from src.models.Patient import Patient
 from src.models.Prescription import Prescription
 from src.models.Medicine import Medicine
+from src.models.Sample import Sample
 import src.utils as utils
 
 class DoctorInterface(Interface):
@@ -15,9 +16,11 @@ class DoctorInterface(Interface):
         return {
             "Check Notifications": self.check_notifications,
             "View Patients": self.view_patients,
+            "Request Lab Analysis": self.request_lab_analysis,
         }
-
-    def view_patients(self):
+    
+    def search_patients(self):
+        print("Search for patient")
         options_str = "Available options:\n"
 
         for i, option in enumerate(("View personal patients", "Search patients by name", "View all patients")):
@@ -61,8 +64,19 @@ class DoctorInterface(Interface):
                 if page > 0:
                     page -= 1
             else:
-                patient = Patient(patients[choice-1][2])
-                break
+                return Patient(patients[choice-1][2])
+    
+    def request_lab_analysis(self):
+        print("Request lab analysis")
+        patient = self.search_patients()
+        description = input("Enter sample description: ")
+
+        Sample.add(patient.patent_id, self.doctor_id, description)
+
+        print("Sample submitted for analysis")
+
+    def view_patients(self):
+        patient = self.search_patients()
 
         print("Showing patient info")
         print("First name:", patient.first_name)
@@ -207,4 +221,11 @@ class DoctorInterface(Interface):
 
             response = input("Reponse: ")
             patient.addNotification(f"Doctor {self.doctor.first_name} {self.doctor.last_name} responded to your symptoms: {response}")
-    
+        
+        elif notification.notification_type == "AnalysisResult":
+            print("Showing analysis result")
+
+            sample = Sample(notification.sample_id)
+            print("Sample description:", sample.description)
+            print("Analysis result:", notification.result)
+            
