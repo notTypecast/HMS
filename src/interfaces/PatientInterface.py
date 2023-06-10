@@ -3,6 +3,8 @@ from datetime import datetime
 from src.models.Patient import Patient
 from src.models.Doctor import Doctor
 from src.models.Secretary import Secretary
+import src.utils as utils
+
 
 class PatientInterface(Interface):
     def __init__(self):
@@ -15,9 +17,36 @@ class PatientInterface(Interface):
             "Set Appointment": self.setAppointment,
             "View Profile": self.viewProfile,
             "Set Symptoms": self.setSymptoms,
+            "Search Doctors": self.searchDoctors
         }
-    
-    def setSymptomps(self):
+
+    def searchDoctors(self):
+        chosenDoctor = self.doctorSearch()
+        print("Doctor Profile") 
+        print(f"First Name:{chosenDoctor.first_name}")
+        print(f"Last Name: {chosenDoctor.last_name}")
+        print(f"Speciality: {chosenDoctor.speciality}")
+        print(f"Email: {chosenDoctor.email}")
+        print(f"Phone: {chosenDoctor.phone}")
+        
+        options_str = "Available options:\n"
+
+        for i, option in enumerate(("Contact Doctor", "Book Appointment")):
+            option_str += str(i+1) + ":" + option
+
+        choice = utils.get_num_choice(2, options_str,"Enter option number or exit: ", exit=True)
+
+        if choice == 1:
+            req = input("Message for doctor: ")
+            chosenDoctor.addNotification(f"Patient {self.patient.first_name} {self.patient.last_name} has left you a message.", 
+                                         "Contact", 
+                                         self.patient_id, 
+                                         req)
+        
+        else:
+            self.setAppointment(doctor=chosenDoctor)
+
+    def setSymptoms(self):
         print("Set Symptoms")
         symptoms = input("Briefly describe your symptoms: ")
 
@@ -100,31 +129,34 @@ class PatientInterface(Interface):
             
             print("=====================================")
     
-    def setAppointment(self):
+    def setAppointment(self, doctor=None):
         print("Set Appointment")
-        speciality = input("Required doctor speciality: ")
+        if doctor is None:
+            speciality = input("Required doctor speciality: ")
+            # ensure speciality exists
+            if not Doctor.specialityExists(speciality):
+                print("No such specialization available")
+                return
+
+            # ensure doctor is available
+            req_day = datetime.strptime(date, "%Y-%m-%d").weekday()
+
+            if not Doctor.doctorAvailable(speciality, req_day):
+                print("No doctor available on that day")
+                return
+        else:
+            speciality = doctor.speciality
+            
         date = input("Preferred date (YYYY-MM-DD): ")
         info = input("Additional information: ")
         
-        # ensure speciality exists
-        if not Doctor.specialityExists(speciality):
-            print("No such specialization available")
-            return
-        
-        # ensure doctor is available
-        req_day = datetime.strptime(date, "%Y-%m-%d").weekday()
-
-        if not Doctor.doctorAvailable(speciality, req_day):
-            print("No doctor available on that day")
-            return
-        
         # send notification to some secretary
-        Secretary.addNotification(
-        f"Patient {self.patient.first_name} {self.patient.last_name} wants to set an appointment with a doctor of speciality {speciality} on {date} with additional information {info}",
-        "AppointmentRequest",
-        self.patient_id,
-        speciality,
-        date,
-        info)
+        Secretary.addNotification(f"Patient {self.patient.first_name} {self.patient.last_name} wants to set an appointment with a doctor of speciality {speciality} on {date} with additional information {info}", 
+                                  "AppointmentRequest", 
+                                  self.patient_id, 
+                                  speciality, 
+                                  date, 
+                                  info,
+                                  doctor.doctor_id if doctor is not None else None)
         
         print("Appointment request sent to secretary")

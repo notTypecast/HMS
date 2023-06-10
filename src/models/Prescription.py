@@ -40,7 +40,7 @@ class Prescription:
 
         return prescription
     
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Prescription
         Deletes the prescription from the database

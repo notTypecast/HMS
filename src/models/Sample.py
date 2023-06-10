@@ -39,7 +39,7 @@ class Sample:
 
         return sample
     
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Sample
         Deletes the sample from the database

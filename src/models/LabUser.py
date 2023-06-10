@@ -40,7 +40,7 @@ class LabUser(Staff):
 
         return labUser
 
-    def __del__(self):
+    def remove(self):
         """
         Destructor of LabUser
         Deletes the LabUser from the database

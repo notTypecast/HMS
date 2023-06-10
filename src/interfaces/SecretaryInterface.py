@@ -1,13 +1,14 @@
 from src.interfaces.Interface import Interface
 from datetime import datetime 
 from src.models.Secretary import Secretary
+from src.models.Doctor import Doctor
 from src.models.Patient import Patient
 import src.utils as utils
 
 class SecretaryInterface(Interface):
     def __init__(self):
-        self.staff_id = 0
-        self.secretary = Secretary(self.staff_id)
+        staff_id = 0
+        self.secretary = Secretary(staff_id)
 
     @property
     def options(self):
@@ -16,7 +17,7 @@ class SecretaryInterface(Interface):
         }
 
     def checkNotifications(self):
-        notifications = self.secretary.getNotifications(self.staff_id)
+        notifications = self.secretary.getNotifications()
 
         if len(notifications) == 0:
             print("There are no unread notifications")
@@ -33,9 +34,19 @@ class SecretaryInterface(Interface):
         notification = notifications[choice-1]
 
         if notification.notification_type == "AppointmentRequest":
+            print("Appointment Request")
+            patient = Patient(notification.patient_id)
+            print(f"Patient: {patient.first_name} {patient.last_name}")
+            print(f"Date: {notification.appointment_date}")
+            print(f"Appointment information: {notification.appointment_info}")
+            print(f"Requested speciality: {notification.speciality}")
+            if notification.doctor_id is not None:
+                doctor = Doctor(notification.doctor_id)
+                print(f"Requested doctor: {doctor.first_name} {doctor.last_name}")
+
             req_day = datetime.strptime(notification.appointment_date, "%Y-%m-%d").weekday() 
 
-            doctorsAvailable = Secretary.getAvailabileDoctors(notification.speciality, req_day)
+            doctorsAvailable = Doctor.getAvailabileDoctors(notification.speciality, req_day)
 
             while True:
                 choice = input("Would you like to accept this request? (y/n)").lower()
@@ -53,8 +64,6 @@ class SecretaryInterface(Interface):
                     reason = input("Provide a reason for the cancellation: ")
                     cancellation_reason = f". Cancellation reason: \n {reason}"
 
-
-                patient = Patient(notification.patient_id)
                 patient.addNotification(f"Your appointment request for {notification.appointment_date} was cancelled{cancellation_reason}")
                 
                 print("Notification sent to patient")
@@ -80,5 +89,9 @@ class SecretaryInterface(Interface):
             patient.addNotification(f"Your appointment request was accepted! Your appointment is scheduled for {notification.appointment_date}.{additional_info}")
 
         elif notification.notification_type == "Symptoms":
-            # TODO symptoms notification use case
-            pass
+            patient = Patient(notification.patient_id)
+            print(f"Showing symptoms for patient {patient.first_name} {patient.last_name}")
+            print(notification.symptoms)
+
+            doctor = self.searchDoctor(notification.speciality)
+            doctor.addNotification(f"Patient {patient.first_name} {patient.last_name} has reported symptoms.", "Symptoms", patient.patient_id, notification.symptoms)

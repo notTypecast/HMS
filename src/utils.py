@@ -20,7 +20,17 @@ def create_staff_member(cursor, first_name, last_name, email, birthdate, sex, mo
     
     return cursor.lastrowid
 
-def get_num_choice(list_len, options_str, prompt, exit=False):
+def get_num_choice(list_len, options_str, prompt, exit=False, other=None):
+    """
+    args:
+        list_len: length of the list of options
+        options_str: string of options to print
+        prompt: prompt to print
+        exit: whether to allow the user to exit by typing "exit"
+        other: list of other options to allow
+    Returns:
+        the number chosen by the user, or False if the user chose to exit, or the other option in the list
+    """
     while True:
         print(options_str)
         choice = input(prompt)
@@ -36,5 +46,7 @@ def get_num_choice(list_len, options_str, prompt, exit=False):
             return choice
 
         except ValueError:
+            if type(other) is list and choice in other:
+                return choice
             print("Invalid option number")
             continue

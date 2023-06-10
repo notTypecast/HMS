@@ -33,9 +33,13 @@ class Notification:
                 self.speciality = row[4]
                 self.appointment_date = row[5]
                 self.appointment_info = row[6]
+                self.doctor_id = row[7]
             elif self.notification_type == "Symptoms":
                 self.patient_id = row[3]
-                self.symptoms = row[7]
+                self.symptoms = row[8]
+            elif self.notification_type == "Contact":
+                self.patient_id = row[3]
+                self.contact_info = row[9]
 
             self.staff_id = row[-1]
 
@@ -55,13 +59,16 @@ class Notification:
             c.execute("INSERT INTO Notification (message, patient_id) VALUES (?, ?)", args)
         elif recipient == "staff":
             if args[1] == "AppointmentRequest":
-                c.execute("""INSERT INTO StaffNotification (message, notification_type, patient_id, speciality, appointment_date, appointment_info, staff_id) VALUES (?, ?, ?, ?, ?, ?, ?)""", 
+                c.execute("""INSERT INTO StaffNotification (message, notification_type, patient_id, speciality, appointment_date, appointment_info, doctor_id, staff_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", 
                 args)
             elif args[1] == "Symptoms":
                 c.execute("""INSERT INTO StaffNotification (message, notification_type, patient_id, symptoms, staff_id) VALUES (?, ?, ?, ?, ?)""",
                 args)
             elif args[1] == "Message":
                 c.execite("""INSERT INTO StaffNotification (message, notification_type, staff_id) VALUES (?, ?, ?)""",
+                args)
+            elif args[1] == "Contact":
+                c.execute("""INSERT INTO StaffNotification (message, notification_type, patient_id, contact_info, staff_id) VALUES (?, ?, ?, ?, ?)""",
                 args)
             
         conn.commit()

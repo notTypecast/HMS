@@ -30,7 +30,7 @@ class Medicine:
 
         return medicine
 
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Medicine
         Deletes the Medicine from the database

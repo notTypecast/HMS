@@ -41,7 +41,7 @@ class Doctor(Staff):
 
         return doctor
 
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Doctor
         Deletes the doctor from the database
@@ -73,6 +73,18 @@ class Doctor(Staff):
         """
         Notification.addNotification("staff", *args, self.doctor_id)
 
+    def getNotifications(self):
+        """
+        Get all notifications for this doctor
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT notification_id FROM StaffNotification WHERE staff_id=?", (self.doctor_id,))
+        res = c.fetchall()
+        conn.close()
+        
+        return [Notification(notification_id) for notification_id in res]
+
     @staticmethod
     def specialityExists(speciality):
         """
@@ -103,4 +115,51 @@ class Doctor(Staff):
 
         return False
 
+    @staticmethod
+    def getAvailabileDoctors(speciality, req_day):
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute(
+            """
+                SELECT doctor_id
+                FROM Doctor 
+                INNER JOIN Staff ON Doctor.doctor_id = Staff.staff_id
+                WHERE Doctor.speciality = ? 
+                    AND (Staff.days_available & (1 << ?)) > 0
+            """
+            ,(speciality, req_day,)
+        )
+        doctorsAvailable = c.fetchall()
+        conn.close()
+
+        return [Doctor(doctor_id) for doctor_id in doctorsAvailable]
+
+    @staticmethod
+    def getDoctorsBySpeciality(speciality=None, page_num=1, page_size=10):
+        """
+        Get all doctors with the given speciality
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        if speciality is None:
+            c.execute("SELECT first_name, last_name, speciality, doctor_id FROM Doctor INNER JOIN Staff ON Staff.staff_id=Doctor.doctor_id LIMIT ? OFFSET ?", (speciality, page_size, (page_num-1)*page_size))
+        else:
+            c.execute("SELECT first_name, last_name, speciality, doctor_id FROM Doctor INNER JOIN Staff ON Staff.staff_id=Doctor.doctor_id WHERE speciality=? COLLATE NOCASE LIMIT ?, ?", (speciality, page_size, (page_num-1)*page_size))
+        row = c.fetchall()
+        conn.close()
+
+        return row
+
+    @staticmethod
+    def searchDoctorsByName(first_name, last_name, page_num=1, page_size=10):
+        """
+        Get all doctors matching the given name
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT first_name, last_name, speciality, doctor_id FROM Doctor INNER JOIN Staff ON Staff.staff_id=Doctor.doctor_id WHERE first_name LIKE ? COLLATE NOCASE AND last_name LIKE ? COLLATE NOCASE LIMIT ?, ?", (first_name, last_name, page_size, (page_num-1)*page_size))
+        row = c.fetchall()
+        conn.close()
+
+        return row
     

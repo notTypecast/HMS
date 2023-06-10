@@ -33,7 +33,7 @@ class Appointment:
 
         return appointment
     
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Appointment
         Deletes the appointment from the database

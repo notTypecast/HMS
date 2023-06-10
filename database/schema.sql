@@ -79,16 +79,21 @@ CREATE TABLE IF NOT EXISTS Address (
 CREATE TABLE IF NOT EXISTS StaffNotification (
     notification_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     message TEXT NOT NULL,
-    notification_type TEXT CHECK(notification_type IN ("AppointmentRequest", "Message", "Symptoms")) NOT NULL,
-    -- For appointment request notifications
+    notification_type TEXT CHECK(notification_type IN ("AppointmentRequest", "Message", "Symptoms", "Contact")) NOT NULL,
+    -- For appointment request notifications (secretary)
     patient_id INTEGER DEFAULT NULL,
     speciality VARCHAR(255) DEFAULT NULL,
     appointment_date DATE DEFAULT NULL,
     appointment_info TEXT DEFAULT NULL,
+    doctor_id INTEGER DEFAULT NULL,
     -- --
-    -- For symptom notifications
+    -- For symptom notifications (secretary/doctor)
     -- uses patient_id from above
     symptoms TEXT DEFAULT NULL,
+    -- --
+    -- For contact notifications from patients (doctor)
+    -- uses patient_id from above
+    contact_info TEXT DEFAULT NULL,
     -- --
     staff_id INTEGER NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Staff(staff_id) ON UPDATE CASCADE ON DELETE CASCADE

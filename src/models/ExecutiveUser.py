@@ -38,7 +38,7 @@ class ExecutiveUser(Staff):
 
         return executiveUser
 
-    def __del__(self):
+    def remove(self):
         """
         Destructor of ExecutiveUser
         Deletes the user from the database

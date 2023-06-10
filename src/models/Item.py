@@ -29,7 +29,7 @@ class Item:
 
         return item
 
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Item
         Deletes the item from the database

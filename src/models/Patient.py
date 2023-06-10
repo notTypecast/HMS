@@ -48,7 +48,7 @@ class Patient:
 
         return patient
     
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Patient
         Deletes the patient from the database

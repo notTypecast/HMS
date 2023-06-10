@@ -1,6 +1,5 @@
 from src.models.Staff import Staff
 from src.models.Notification import Notification
-from src.models.Doctor import Doctor
 import src.utils as utils
 
 class Secretary(Staff):
@@ -85,6 +84,18 @@ class Secretary(Staff):
         conn.commit()
         conn.close()
 
+    def getNotifications(self):
+        """
+        Get all notifications for this secretary
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT notification_id FROM StaffNotification WHERE staff_id=?", (self.secretary_id,))
+        res = c.fetchall()
+        conn.close()
+        
+        return [Notification(notification_id) for notification_id in res]
+
     @staticmethod
     def addNotification(*args):
         """
@@ -100,35 +111,6 @@ class Secretary(Staff):
         conn.close()
 
         Notification.addNotification("staff", *args, secretary_id)
-
-    @staticmethod
-    def getNotifications(staff_id):
-        conn = utils.get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT notification_id FROM StaffNotification WHERE staff_id=?", (staff_id,))
-        res = c.fetchall()
-        conn.close()
-        
-        return [Notification(notification_id) for notification_id in res]
-    
-    @staticmethod
-    def getAvailabileDoctors(speciality, req_day):
-        conn = utils.get_db_connection()
-        c = conn.cursor()
-        c.execute(
-            """
-                SELECT doctor_id
-                FROM Doctor 
-                INNER JOIN Staff ON Doctor.doctor_id = Staff.staff_id
-                WHERE Doctor.speciality = ? 
-                    AND (Staff.days_available & (1 << ?)) > 0
-            """
-            ,(speciality, req_day,)
-        )
-        doctorsAvailable = c.fetchall()
-        conn.close()
-
-        return [Doctor(doctor_id) for doctor_id in doctorsAvailable]
 
     @staticmethod
     def setAppointment(patient_id, doctor_id, appointment_time):
