@@ -153,5 +153,43 @@ class Patient:
         """
         self.symptoms = symptoms
         self.modify(symptoms=symptoms)
-    
+
+    @staticmethod
+    def getPatients(page_num=1, page_size=10):
+        """
+        Get all patients
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT first_name, last_name, patient_id FROM Patient LIMIT ? OFFSET ?", (page_size, (page_num-1)*page_size))
+        rows = c.fetchall()
+        conn.close()
+
+        return rows
+
+    @staticmethod
+    def searchPatientsByName(first_name, last_name, page_num=1, page_size=10):
+        """
+        Get all patients with the given name
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT first_name, last_name, patient_id FROM Patient WHERE first_name LIKE ? COLLATE NOCASE AND last_name LIKE ? COLLATE NOCASE LIMIT ? OFFSET ?", (first_name, last_name, page_size, (page_num-1)*page_size))
+        rows = c.fetchall()
+        conn.close()
+
+        return rows
+
+    @staticmethod
+    def searchPatiensByDoctor(doctor_id, page_num=1, page_size=10):
+        """
+        Get all patients with the given doctor
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT first_name, last_name, patient_id FROM Patient WHERE patient_id=? LIMIT ? OFFSET ?", (doctor_id, page_size, (page_num-1)*page_size))
+        rows = c.fetchall()
+        conn.close()
+
+        return rows
     

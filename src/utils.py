@@ -46,7 +46,7 @@ def get_num_choice(list_len, options_str, prompt, exit=False, other=None):
             return choice
 
         except ValueError:
-            if type(other) is list and choice in other:
-                return choice
+            if type(other) is list and choice.lower() in other:
+                return choice.lower()
             print("Invalid option number")
             continue

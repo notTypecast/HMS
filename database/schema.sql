@@ -54,7 +54,6 @@ CREATE TABLE IF NOT EXISTS LabUser (
 
 CREATE TABLE IF NOT EXISTS ExecutiveUser(
     executiveuser_id INTEGER PRIMARY KEY,
-    -- more columns?
     FOREIGN KEY (executiveUser_id) REFERENCES Staff(staff_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 

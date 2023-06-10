@@ -29,7 +29,7 @@ class Interface(ABC):
     def doctorSearch(speciality=None):
         options_str = "Available options:\n"
 
-        for i, option in enumerate(("Search Doctor","Choose Doctor")):
+        for i, option in enumerate(("Search Doctor", "Choose Doctor")):
             options_str = str(i+1) + ": " + option + "\n"
         
         choice = utils.get_num_choice(2, options_str, "Enter the option number: ")

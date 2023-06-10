@@ -53,3 +53,16 @@ class Medicine:
         c.execute("UPDATE Medicine SET name=?, description=?, route_of_administration=? WHERE medicine_id=?", (getarg(name, self.name), getarg(description, self.description), getarg(route_of_administration, self.route_of_administration), self.secretary_id))
         conn.commit()
         conn.close()
+
+    @staticmethod
+    def getAllMedicine(page_num=0, page_size=10):
+        """
+        Returns a list of all medicine in page
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT name, medicine_id FROM Medicine LIMIT ? OFFSET ?", (page_size, page_size*page_num))
+        rows = c.fetchall()
+        conn.close()
+
+        return rows

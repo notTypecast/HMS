@@ -51,25 +51,13 @@ class Prescription:
         conn.commit()
         conn.close()
 
-    def modify(self, patient_id=None, doctor_id=None):
-        """
-        Modify the prescription
-        """
-        getarg = lambda new, old: new if new is not None else old
-        
-        conn = utils.get_db_connection()
-        c = conn.cursor()
-        c.execute("UPDATE Prescription SET patient_id=?, doctor_id=? WHERE prescription_id=?", (getarg(patient_id, self.patient_id), getarg(doctor_id, self.doctor_id), self.prescription_id))
-        conn.commit()
-        conn.close()
-
     def getMedicine(self):
         """
-        Returns list of tuples (medicine_id, amount_mg)
+        Returns list of tuples (medicine, amount_mg)
         """
         conn = utils.get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT medicine_id, amount_mg FROM PrescriptionToMedicine WHERE prescription_id=?", (self.prescription_id,))
+        c.execute("SELECT Medicine.name, PrescriptionToMedicine.amount_mg FROM PrescriptionToMedicine INNER JOIN Medicine ON PrescriptionToMedicine.medicine_id=Medicine.medicine_id WHERE PrescriptionToMedicine.prescription_id=?", (self.prescription_id,))
         rows = c.fetchall()
         conn.close()
 

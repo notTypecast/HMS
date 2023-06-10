@@ -32,7 +32,7 @@ class PatientInterface(Interface):
         options_str = "Available options:\n"
 
         for i, option in enumerate(("Contact Doctor", "Book Appointment")):
-            option_str += str(i+1) + ":" + option
+            option_str += str(i+1) + ":" + option + "\n"
 
         choice = utils.get_num_choice(2, options_str,"Enter option number or exit: ", exit=True)
 
@@ -43,8 +43,11 @@ class PatientInterface(Interface):
                                          self.patient_id, 
                                          req)
         
-        else:
+        elif choice == 2:
             self.setAppointment(doctor=chosenDoctor)
+
+        else:
+            return
 
     def setSymptoms(self):
         print("Set Symptoms")
