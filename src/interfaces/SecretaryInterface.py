@@ -1,10 +1,13 @@
 from src.interfaces.Interface import Interface
-from datetime import datetime
-import src.utils as utils 
+from datetime import datetime 
+from src.models.Secretary import Secretary
+from src.models.Patient import Patient
+import src.utils as utils
 
 class SecretaryInterface(Interface):
     def __init__(self):
         self.staff_id = 0
+        self.secretary = Secretary(self.staff_id)
 
     @property
     def options(self):
@@ -13,38 +16,26 @@ class SecretaryInterface(Interface):
         }
 
     def checkNotifications(self):
-        conn = utils.get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT * FROM StaffNotification WHERE staff_id=?", (self.staff_id,))
-        res = c.fetchall()
+        notifications = self.secretary.getNotifications(self.staff_id)
 
-        if len(res) == 0:
+        if len(notifications) == 0:
             print("There are no unread notifications")
             return
 
         print("Unread Notifications")
 
         options_str = "Available options:\n"
-        for i, option in enumerate(res):
-            options_str += str(i+1) + ": " + option[1] + "\n"
+        for i, notification in enumerate(notifications):
+            options_str += str(i+1) + ": " + notification.message + "\n"
         
         
-        choice = utils.get_num_choice(len(res), options_str, "Enter the option number: ")
-        notification = res[choice-1]
+        choice = utils.get_num_choice(len(notifications), options_str, "Enter the option number: ")
+        notification = notifications[choice-1]
 
-        if notification[2] == "AppointmentRequest":
-            speciality = notification[4]
-            req_day = datetime.strptime(notification[5], "%Y-%m-%d").weekday()
-            c.execute(
-                """
-                    SELECT Staff.first_name, Staff.last_name, Doctor.speciality, Staff.days_available,Doctor.doctor_id
-                    FROM Doctor 
-                    INNER JOIN Staff ON Doctor.doctor_id = Staff.staff_id
-                    WHERE Doctor.speciality = ? 
-                        AND (Staff.days_available & (1 << ?)) > 0
-                """
-            ,(speciality, req_day,))
-            doctorsAvailable = c.fetchall()
+        if notification.notification_type == "AppointmentRequest":
+            req_day = datetime.strptime(notification.appointment_date, "%Y-%m-%d").weekday() 
+
+            doctorsAvailable = Secretary.getAvailabileDoctors(notification.speciality, req_day)
 
             while True:
                 choice = input("Would you like to accept this request? (y/n)").lower()
@@ -62,51 +53,32 @@ class SecretaryInterface(Interface):
                     reason = input("Provide a reason for the cancellation: ")
                     cancellation_reason = f". Cancellation reason: \n {reason}"
 
-                c.execute("""
-                    INSERT INTO PatientNotification (message, patient_id)
-                    VALUES (?, ?)
-                """, (
-                    f"Your appointment request for {notification[5]} was cancelled{cancellation_reason}",
-                    notification[3]
-                ))
 
+                patient = Patient(notification.patient_id)
+                patient.addNotification(f"Your appointment request for {notification.appointment_date} was cancelled{cancellation_reason}")
+                
                 print("Notification sent to patient")
 
                 return
 
 
-            options_str = "The available Doctors for this appointment are:\n"
-            for i, option in enumerate(res):
-                options_str += str(i+1) + ":" + option[0] + "," + option[1] + "\n"
-
+            options_str = "The available doctors for this appointment are:\n"
+            for i, doctor in enumerate(doctorsAvailable):
+                options_str += str(i+1) + ":" + doctor.first_name + "," + doctor.last_name + "\n"
 
 
             choice = utils.get_num_choice(len(doctorsAvailable), options_str, "Enter the doctor's option number: ")
-            chosenDoctor = res[choice-1]
+            chosenDoctor = notifications[choice-1]
 
             additional_info = "Additional information:\n" + input("Provide additional information for the patient: ")
 
-            # TODO: determine appointment time
+            Secretary.setAppointment(notification.patient_id, doctor.doctor_id, notification.appointment_date)
 
-            c.execute("""
-                INSERT INTO Appointment(patient_id,doctor_id,appointment_time)
-                VALUES(?,?,?)    
-            """
-            ,(notification[3], chosenDoctor[4], notification[5],))
+            chosenDoctor.addNotification(f"An appointment has been scheduled for {notification.appointment_date}.", "Message", doctor.doctor_id)
 
-            c.execute("""
-                INSERT INTO StaffNotification (message, staff_id, notification_type)
-                VALUES (?, ?, ?)
-            """, (
-                f"An appointment has been scheduled for {notification[5]}.",
-                chosenDoctor[4],
-                "Message"
-            ))
+            patient = Patient(notification.patient_id)
+            patient.addNotification(f"Your appointment request was accepted! Your appointment is scheduled for {notification.appointment_date}.{additional_info}")
 
-            c.execute("""
-                INSERT INTO PatientNotification (message, patient_id)
-                VALUES (?, ?)
-            """, (
-                f"Your appointment request was accepted! Your appointment is scheduled for {notification[5]}.{additional_info}",
-                notification[3]
-            ))
+        elif notification.notification_type == "Symptoms":
+            # TODO symptoms notification use case
+            pass

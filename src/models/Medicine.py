@@ -1,12 +1,16 @@
-from abc import ABC
 import src.utils as utils
 
-class Medicine(ABC):
-    def __init__(self, medicine_id,name,description,route_of_administration):
+class Medicine:
+    def __init__(self, medicine_id):
         self.medicine_id = medicine_id
-        self.name = name
-        self.description = description
-        self.route_of_administration = route_of_administration
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM Medicine WHERE medicine_id = ?",(medicine_id,))
+        row = c.fetchall()[0]
+
+        self.name = row[1]
+        self.description = row[2]
+        self.route_of_administration = row[3]
 
     @staticmethod
     def add(name, description, route_of_administration):
@@ -19,7 +23,7 @@ class Medicine(ABC):
     
         c.execute("INSERT INTO Medicine (name,desc, description, route_of_administration) VALUES (?, ?, ?)", (name , description , route_of_administration))
 
-        medicine = Medicine(c.lastrowid, name, description , route_of_administration)
+        medicine = Medicine(c.lastrowid)
 
         conn.commit()
         conn.close()

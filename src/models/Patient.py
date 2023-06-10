@@ -1,16 +1,29 @@
 import src.utils as utils
+from src.models.Address import Address
+from src.models.Appointment import Appointment
+from src.models.Prescription import Prescription
+from src.models.Notification import Notification
 
 class Patient:
-    def __init__(self, patient_id, first_name, last_name, email, birthdate, sex, AMKA, doctor_id, symptoms, address=None, phone=None):
+    def __init__(self, patient_id):
         self.patent_id  = patient_id
-        self.first_name = first_name
-        self.last_name = last_name
-        self.email = email
-        self.birthdate  = birthdate
-        self.sex = sex
-        self.AMKA = AMKA
-        self.doctor_id = doctor_id
-        self.symptoms = symptoms
+
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM Patient WHERE patient_id=?", (patient_id,))
+        row = c.fetchall()[0]
+        conn.close()
+
+        self.first_name = row[1]
+        self.last_name = row[2]
+        self.email = row[3]
+        self.birthdate = row[4]
+        self.sex = row[5]
+        self.AMKA = row[6]
+        self.address_id = row[7]
+        self.phone = row[8]
+        self.doctor_id = row[9]
+        self.symptoms = row[10]
 
     @staticmethod
     def add(first_name, last_name, email, birthdate, sex, AMKA, doctor_id, symptoms, address=None, phone=None):
@@ -28,7 +41,7 @@ class Patient:
         VALUES (?, ?)
         """, (first_name, last_name, email, birthdate, sex, AMKA, doctor_id, symptoms))
 
-        patient = Patient(c.lastrowid, first_name, last_name, email, birthdate, sex, AMKA, doctor_id, symptoms, address, phone)
+        patient = Patient(c.lastrowid)
 
         conn.commit()
         conn.close()
@@ -79,4 +92,66 @@ class Patient:
 
         conn.commit()
         conn.close()
+
+    def addNotification(self, message):
+        """
+        Add a notification to the patient
+        """
+        Notification.addNotification("patient", message, self.patient_id)
+
+    def getAddress(self):
+        """
+        Returns the address of the patient
+        """
+        if self.address_id is None:
+            return None
+        
+        return Address(self.address_id)
+    
+    def getDoctorName(self):
+        """
+        Returns the name of the patient's doctor
+        """
+        if self.doctor_id is None:
+            return None
+
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT first_name, last_name FROM Doctor WHERE doctor_id=?", (self.doctor_id,))
+        row = c.fetchall()[0]
+        conn.close()
+
+        return row[0] + " " + row[1]
+    
+    def getHistory(self):
+        """
+        Returns a list of all the patient's appointments
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT appointment_id FROM Appointment WHERE patient_id=?", (self.patient_id,))
+        rows = c.fetchall()
+        conn.close()
+
+        return [Appointment(row[0]) for row in rows]
+    
+    def getPrescriptions(self):
+        """
+        Returns a list of all the patient's prescriptions
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT prescription_id FROM Prescription WHERE patient_id=?", (self.patient_id,))
+        rows = c.fetchall()
+        conn.close()
+
+        return [Prescription(row[0]) for row in rows]
+    
+    def setSympotms(self, symptoms):
+        """
+        Sets the patient's symptoms
+        """
+        self.symptoms = symptoms
+        self.modify(symptoms=symptoms)
+    
     

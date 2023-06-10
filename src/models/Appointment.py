@@ -1,13 +1,20 @@
-from abc import ABC
 import src.utils as utils
 
-class Appointment(ABC):
-    def __init__(self, visit_id, patient_id, doctor_id, appointment_time, completed):
+class Appointment:
+    def __init__(self, visit_id):
         self.visit_id = visit_id
-        self.patient_id = patient_id
-        self.doctor_id = doctor_id
-        self.appointment_time = appointment_time
-        self.completed = completed
+        
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM Appointment WHERE visit_id = ?",(visit_id,))
+        row = c.fetchall()[0]
+        conn.close()
+
+        self.patient_id = row[1]
+        self.doctor_id = row[2]
+        self.appointment_time = row[3]
+        self.notes = row[4]
+        self.completed = row[5]
 
     @staticmethod
     def add(patient_id, doctor_id, appointment_time):
@@ -20,7 +27,7 @@ class Appointment(ABC):
         
         c.execute("INSERT INTO Appointment (patient_id, doctor_id, appointment_time, completed) VALUES (?, ?, ?, ?)", (patient_id, doctor_id, appointment_time, "False"))
 
-        appointment = Appointment(c.lastrowid, patient_id, doctor_id, appointment_time, "False")
+        appointment = Appointment(c.lastrowid)
         conn.commit()
         conn.close()
 
@@ -48,4 +55,13 @@ class Appointment(ABC):
         c.execute("UPDATE Appointment SET patient_id=?, doctor_id=?, appointment_time=?, completed=? WHERE visit_id=?", (getarg(patient_id, self.patient_id), getarg(doctor_id, self.doctor_id), getarg(appointment_time, self.appointment_time), getarg(completed, self.completed), self.visit_id))
         conn.commit()
         conn.close()
+
+    def getDoctorName(self):
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT first_name, last_name FROM Doctor WHERE doctor_id=?", (self.doctor_id,))
+        row = c.fetchall()[0]
+        conn.close()
+        
+        return row[0] + " " + row[1]
         

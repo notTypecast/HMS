@@ -1,11 +1,26 @@
-from src.models import Staff
+from src.models.Staff import Staff
+from src.models.Notification import Notification
+from src.models.Doctor import Doctor
 import src.utils as utils
 
 class Secretary(Staff):
-    def __init__(self, secretary_id, first_name, last_name, email, birthdate, sex, monthly_salary, day_bitmask, start_time, end_time, office_number, address=None, phone=None):
+    def __init__(self, secretary_id):
         self.secretary_id = secretary_id
-        self.office_number = office_number
-        super().__init__(first_name, last_name, email, birthdate, sex, monthly_salary, day_bitmask, start_time, end_time, address, phone)
+        
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute(
+            """ 
+                SELECT * 
+                FROM Secretary 
+                WHERE secretary_id = ?
+                INNER JOIN Staff ON secretary_id = Staff.staff_id
+            """
+            , (secretary_id,)
+        )
+        row =  c.fetchall()[0]
+        self.office_number = row[1]
+        super().__init__(row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12])
 
 
     @staticmethod
@@ -21,14 +36,14 @@ class Secretary(Staff):
 
         c.execute("INSERT INTO Secretary (secretary_id, office_number) VALUES (?, ?)", (staff_id, office_number))
 
-        secretary = Secretary(c.lastrowid, first_name, last_name, email, birthdate, sex, monthly_salary, day_bitmask, start_time, end_time, office_number, address, phone)
+        secretary = Secretary(c.lastrowid)
 
         conn.commit()
         conn.close()
 
         return secretary
 
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Secretary
         Deletes the Secretary from the database
@@ -69,3 +84,61 @@ class Secretary(Staff):
         
         conn.commit()
         conn.close()
+
+    @staticmethod
+    def addNotification(*args):
+        """
+        Add a notification to some secretary
+        args: list of arguments to be inserted into the StaffNotification table, dependent on the notification type
+        """
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+
+        c.execute("SELECT secretary_id FROM Secretary LIMIT 1")
+        secretary_id = c.fetchall()[0][0]
+
+        conn.close()
+
+        Notification.addNotification("staff", *args, secretary_id)
+
+    @staticmethod
+    def getNotifications(staff_id):
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT notification_id FROM StaffNotification WHERE staff_id=?", (staff_id,))
+        res = c.fetchall()
+        conn.close()
+        
+        return [Notification(notification_id) for notification_id in res]
+    
+    @staticmethod
+    def getAvailabileDoctors(speciality, req_day):
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute(
+            """
+                SELECT doctor_id
+                FROM Doctor 
+                INNER JOIN Staff ON Doctor.doctor_id = Staff.staff_id
+                WHERE Doctor.speciality = ? 
+                    AND (Staff.days_available & (1 << ?)) > 0
+            """
+            ,(speciality, req_day,)
+        )
+        doctorsAvailable = c.fetchall()
+        conn.close()
+
+        return [Doctor(doctor_id) for doctor_id in doctorsAvailable]
+
+    @staticmethod
+    def setAppointment(patient_id, doctor_id, appointment_time):
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+                INSERT INTO Appointment(patient_id, doctor_id, appointment_time)
+                VALUES(?, ?, ?)    
+            """
+            , (patient_id, doctor_id, appointment_time)
+        )
+        conn.close()
+

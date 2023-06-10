@@ -1,12 +1,26 @@
 import src.utils as utils
 
 class Sample:
-    def __init__(self, sample_id, labuser_id, patient_id, sample_date, result):
+    def __init__(self, sample_id):
         self.sample_id = sample_id
-        self.labuser_id = labuser_id
-        self.patient_id = patient_id
-        self.sample_date = sample_date
-        self.result = result
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute(
+            """
+                SELECT * FROM 
+                Sample 
+                WHERE sample_id = ?
+                INNER JOIN LabUser ON Sample.labuser_id = LabUser.labuser_id
+                INNER JOIN Patient ON Sample.patient_id = Patient.patient_id
+            """
+            , (sample_id,)
+        )
+        row = c.fetchall()[0]
+
+        self.labuser_id = row[1]
+        self.patient_id = row[2]
+        self.sample_date = row[3]
+        self.result = row[4]
 
     @staticmethod
     def add(labuser_id, patient_id, sample_date, result):
@@ -19,7 +33,7 @@ class Sample:
         
         c.execute("INSERT INTO Sample (labuser_id, patient_id, sample_date, result) VALUES (?, ?, ?, ?)", (labuser_id, patient_id, sample_date, result))
 
-        sample = Sample(c.lastrowid, labuser_id, patient_id, sample_date, result)
+        sample = Sample(c.lastrowid)
         conn.commit()
         conn.close()
 

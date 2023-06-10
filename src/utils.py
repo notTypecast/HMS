@@ -1,6 +1,6 @@
 import sqlite3
 
-DB_NAME = "hms.db"
+DB_NAME = "database/hms.db"
 
 def get_db_connection():
     """

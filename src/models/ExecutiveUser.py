@@ -1,10 +1,22 @@
-from src.models import Staff
+from src.models.Staff import Staff
 import src.utils as utils
 
 class ExecutiveUser(Staff):
-    def __init__(self, executiveuser_id, first_name, last_name, email, birthdate, sex, monthly_salary, day_bitmask, start_time, end_time, address=None, phone=None):
+    def __init__(self, executiveuser_id):
         self.executiveuser_id = executiveuser_id
-        super().__init__(first_name, last_name, email, birthdate, sex, monthly_salary, day_bitmask, start_time, end_time, address, phone)
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute(
+            """
+                SELECT * 
+                FROM ExecutiveUser
+                WHERE executiveuser_id = ?
+                INNER JOIN Staff ON executiveuser_id  = Staff.staff_id
+            """
+            ,(executiveuser_id)
+        )
+        row = c.fetchall()[0]
+        super().__init__(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11])
         
     @staticmethod
     def add(first_name, last_name, email, birthdate, sex, monthly_salary, day_bitmask, start_time, end_time, address=None, phone=None):
@@ -19,7 +31,7 @@ class ExecutiveUser(Staff):
 
         c.execute("INSERT INTO ExecutiveUser (executiveuser_id) VALUES (?, ?)", (staff_id,))
 
-        executiveUser = ExecutiveUser(c.lastrowid, first_name, last_name, email, birthdate, sex, monthly_salary, day_bitmask, start_time, end_time, address, phone)
+        executiveUser = ExecutiveUser(c.lastrowid)
 
         conn.commit()
         conn.close()

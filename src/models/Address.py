@@ -1,11 +1,18 @@
-from src.utils import utils
+import src.utils as utils
 
 class Address:
-    def __init__(self, address_id, street_name, street_number, postal_code):
+    def __init__(self, address_id):
         self.address_id = address_id
-        self.street_name = street_name
-        self.street_number = street_number
-        self.postal_code = postal_code
+
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT street_name, street_number, postal_code FROM Address WHERE address_id=?", (address_id,))
+        row = c.fetchall()[0]
+        conn.close()
+
+        self.street_name = row[0]
+        self.street_number = row[1]
+        self.postal_code = row[2]
 
     @staticmethod
     def add(street_name, street_number, postal_code):
@@ -24,7 +31,7 @@ class Address:
 
         return address
     
-    def __del__(self):
+    def remove(self):
         """
         Destructor of Address
         Deletes the address from the database
@@ -47,3 +54,5 @@ class Address:
         conn.commit()
         conn.close()
     
+    def full(self):
+        return f"{self.street_number} {self.street_name}, {self.postal_code}"

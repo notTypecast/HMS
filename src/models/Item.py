@@ -1,11 +1,16 @@
-from abc import ABC
 import src.utils as utils
 
-class Item(ABC):
-    def __init__(self, item_id, name, description):
+class Item:
+    def __init__(self, item_id):
         self.item_id = item_id
-        self.name = name
-        self.description = description
+
+        conn = utils.get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM item WHERE item_id=?",(item_id,))
+        row = c.fetchall()[0]
+
+        self.name = row[1]
+        self.description = row[2]
 
     @staticmethod
     def add(name, description):
